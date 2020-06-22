@@ -5,7 +5,7 @@
 module Heap where
 
 -- Common signature for heaps
-class Ord a => Heap m a where
+class (Ord a, Show a, Eq a) => Heap m a where
     make_heap :: m a
     make_singleton :: a -> m a
     find_min :: m a -> Maybe a

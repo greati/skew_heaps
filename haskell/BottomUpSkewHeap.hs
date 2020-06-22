@@ -5,33 +5,47 @@
 module BottomUpSkewHeap where
 
 import Heap
+import Data.Sequence as Seq
 
--- BottomUp implementation of skew heaps
-data Crumb a = LeftCrumb a (BottomUpSkewHeap a) | RightCrumb a (BottomUpSkewHeap a)
+{- A different implementation of a binary tree. Instead of 
+ - describing it as B x A x B, i.e., left subtree, value and right subtree,
+ - describe it as a list of (B, A), where [] is the empty tree
+ - and (L, x):R is the binary tree such that x is the
+ - root value, L is the left subtree and R is the right subtree. We
+ - also assume the form T:(L, x) as a way to access the last element
+ - in the rightmost path of the tree.
+ -}
+data BottomUpSkewHeap a = Tree (Seq (BottomUpSkewHeap a, a))
     deriving (Show, Eq)
-type Breadcrumbs a = [Crumb a]
 
--- The idea here is to store the current tree plus a zipper of the rightmost node
-data BottomUpSkewHeap a = Empty | Meld (BottomUpSkewHeap a) a (BottomUpSkewHeap a) 
-        (BottomUpSkewHeap a, Breadcrumbs a)
-    deriving (Show, Eq)
+{- Auxiliar meld operation implementing tail recursion.
+ - For a detailed explation on this, check the dissertation
+ - "Data Structures and Amortized Complexity in a Functional Setting",
+ - by Berry Schoenmakers.
+ -}
+meld' :: Ord a => BottomUpSkewHeap a -> BottomUpSkewHeap a -> BottomUpSkewHeap a -> BottomUpSkewHeap a
+meld' (Tree Seq.Empty) (Tree Seq.Empty) z = z
+meld' x@(Tree (xu :|> (xt@(Tree xts), xa))) y@(Tree (yu :|> (yt@(Tree yts), ya))) z
+    | ya <= xa  = meld' (Tree xu) y (Tree ((z, xa) :<| xts))
+    | otherwise = meld' (Tree yu) x (Tree ((z, ya) :<| yts))
+meld' x@(Tree (xu :|> (xt@(Tree xts), xa))) y z = meld' (Tree xu) y (Tree ((z, xa) :<| xts))
+meld' x y@(Tree (yu :|> (yt@(Tree yts), ya))) z = meld' (Tree yu) x (Tree ((z, ya) :<| yts))
 
-instance (Ord a) => Heap BottomUpSkewHeap a where
-    make_heap = Empty 
+instance (Ord a, Show a, Eq a) => Heap BottomUpSkewHeap a where
 
-    make_singleton x = Meld Empty x Empty (Empty, [])
+    make_heap = Tree (Seq.Empty)
 
-    find_min Empty = Nothing
-    find_min (Meld _ x _ _ ) = Just x
+    make_singleton x = Tree $ (make_heap, x) :<| Seq.Empty
 
-    meld h1     Empty   = h1
-    meld Empty  h2      = h2
-    meld h1@(Meld l1 x1 r1 (rm1@(Meld rml1 rmx1 rmr1 k), (RightCrumb s1 ll1):b1s)) 
-         h2@(Meld l2 x2 r2 ((Meld rml2 rmx2 rmr2 w), (RightCrumb s2 ll2):b2s))
-        | rmx1 <= rmx2 = meld (Meld (newleft) s1 ll1 (Meld ll1 s1 rm1 k, b1s)) Empty
-        | otherwise = undefined
-        where newleft = Meld (Meld rmr2 rmx2 rml2 w) rmx1 rml1 k
+    find_min (Tree Seq.Empty) = Nothing
+    find_min (Tree ((_, x) :<| _)) = Just x
 
-    insert = undefined
+    meld x y = meld' x y (Tree Seq.Empty)
 
-    delete_min = undefined
+    insert x y = meld (make_singleton x) y
+    
+    delete_min (Tree Seq.Empty) = (Nothing, Tree Seq.Empty)
+    delete_min (Tree ((x, ta) :<| y)) = (Just ta, meld x (Tree y))
+
+
+

@@ -10,7 +10,7 @@ import Heap
 data SkewHeap a = Empty | Meld (SkewHeap a) a (SkewHeap a)
     deriving (Show, Eq)
 
-instance (Ord a) => Heap SkewHeap a where
+instance (Ord a, Show a, Eq a) => Heap SkewHeap a where
     make_heap = Empty
 
     make_singleton x = Meld Empty x Empty
