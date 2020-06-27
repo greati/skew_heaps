@@ -4,6 +4,8 @@
 
 module Heap where
 
+import Data.Tree as DTree
+
 -- Common signature for heaps
 class (Ord a, Show a, Eq a) => Heap m a where
     make_heap :: m a
@@ -12,4 +14,5 @@ class (Ord a, Show a, Eq a) => Heap m a where
     meld :: m a -> m a -> m a
     insert :: a -> m a -> m a
     delete_min :: m a -> (Maybe a, m a)
+    toStringDataTree :: m a -> DTree.Tree String
 

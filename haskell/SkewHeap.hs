@@ -5,10 +5,15 @@
 module SkewHeap where
 
 import Heap
+import Data.Tree as DTree
 
 -- Top down implementation of skew heaps
 data SkewHeap a = Empty | Meld (SkewHeap a) a (SkewHeap a)
-    deriving (Show, Eq)
+    deriving (Eq)
+
+instance (Ord a, Show a, Eq a) => Show (SkewHeap a) where
+    show Empty = []
+    show h = (drawTree . toStringDataTree) $ h
 
 instance (Ord a, Show a, Eq a) => Heap SkewHeap a where
     make_heap = Empty
@@ -34,6 +39,9 @@ instance (Ord a, Show a, Eq a) => Heap SkewHeap a where
 
     delete_min Empty = (Nothing, Empty)
     delete_min (Meld l x r) = (Just x, meld l r)
+
+    toStringDataTree x@(Meld xl xa xr) = Node (show xa) [toStringDataTree xl, toStringDataTree xr]
+    toStringDataTree Empty = Node "[]" []
 
 --m1 = Meld (make_singleton 50) 1 (Meld (Meld Empty 13 (make_singleton 16)) 10 (Meld (make_singleton 25) 20 Empty))
 --m2 = Meld (Meld (make_singleton 40) 19 Empty) 5 (Meld (make_singleton 30) 12 (make_singleton 14))
