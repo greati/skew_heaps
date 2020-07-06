@@ -27,7 +27,7 @@ instance (Ord a, Show a, Eq a) => Heap SkewHeap a where
     meld x      Empty   = x
     meld x@(Tree l1 a1 r1) y@(Tree l2 a2 r2) 
         | a1 <= a2  = Tree (meld r1 y) a1 l1
-        | otherwise = Tree (meld r2 x) a2 l2
+        | otherwise = Tree (meld x r2) a2 l2
     
     insert x h = meld (make_singleton x) h 
 
